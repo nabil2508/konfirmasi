@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Konfirmasi Pembayaran Jersey Tim</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter & Plus Jakarta Sans (SF Pro Fallback) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Supabase JS Client SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', '"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        ios: {
+                            bg: '#f2f2f7',
+                            card: '#ffffff',
+                            cardSecondary: '#f2f2f7',
+                            cardTertiary: '#e5e5ea',
+                            blue: '#007AFF',
+                            green: '#34C759',
+                            orange: '#FF9500',
+                            red: '#FF3B30',
+                            purple: '#AF52DE',
+                            indigo: '#5856D6',
+                            gray: '#8E8E93',
+                            gray2: '#AEAEB2',
+                            gray3: '#C7C7CC',
+                            gray4: '#D1D1D6',
+                            gray5: '#E5E5EA',
+                            gray6: '#F2F2F7',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #f2f2f7;
+            color: #1c1c1e;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Plus Jakarta Sans", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Custom iOS scrollbar */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c7c7cc; border-radius: 9999px; }
+        
+        /* iOS Blur & Card Styling Light Mode */
+        .ios-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .ios-nav {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .ios-card {
+            background-color: #ffffff;
+            border: 0.5px solid rgba(0, 0, 0, 0.08);
+            border-radius: 22px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+        }
+
+        .ios-squircle {
+            border-radius: 14px;
+        }
+
+        /* iOS Segmented Control */
+        .ios-segmented {
+            background-color: #e5e5ea;
+            padding: 3px;
+            border-radius: 12px;
+            border: 0.5px solid rgba(0, 0, 0, 0.05);
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.08); }
+        }
+        .animate-pulse-glow { animation: pulse-glow 2s infinite ease-in-out; }
+    </style>
+</head>
+<body class="bg-[#f2f2f7] text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-ios-blue selection:text-white pb-20 md:pb-6">
+
+    <header class="ios-nav sticky top-0 z-40 transition-all shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex items-center justify-between gap-3">
+                
+                <!-- Logo & Brand Title -->
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-b from-blue-500 to-blue-600 text-white flex items-center justify-center font-bold text-base shadow-lg shadow-blue-500/20 ring-1 ring-black/5">
+                        <i class="fa-solid fa-shirt text-sm"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-base md:text-lg font-bold text-slate-900 tracking-tight leading-none">Jersey PayManager</h1>
+                            <span id="cloudStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-200 text-slate-600 border border-slate-300/60 cursor-pointer" onclick="openSupabaseModal()">
+                                <span class="w-1.5 h-1.5 rounded-full bg-ios-orange"></span>
+                                <span id="cloudStatusText">Local Storage</span>
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 hidden sm:block">Kelola status donasi & pelunasan tim jersey (36 Pcs)</p>
+                    </div>
+                </div>
+
+                <!-- Top Header Action Buttons -->
+                <div class="flex items-center gap-2">
+                    <button onclick="openSupabaseModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-full border border-slate-200 transition-all active:scale-95 shadow-sm" title="Pengaturan Supabase Cloud">
+                        <i class="fa-solid fa-database text-ios-green"></i>
+                        <span class="hidden md:inline">Supabase</span>
+                    </button>
+
+                    <button onclick="openVercelModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-full border border-slate-200 transition-all active:scale-95 shadow-sm" title="Panduan Deploy Vercel">
+                        <i class="fa-solid fa-bolt text-ios-orange"></i>
+                        <span class="hidden md:inline">Vercel</span>
+                    </button>
+
+                    <button onclick="openShareModal()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-ios-blue hover:bg-blue-600 text-white text-xs font-semibold rounded-full shadow-lg shadow-blue-500/20 transition-all active:scale-95">
+                        <i class="fa-brands fa-whatsapp text-sm"></i>
+                        <span class="hidden sm:inline">Salin Rekap WA</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            
+            <!-- Stat Card 1: Total Pemesan -->
+            <div class="ios-card p-4 relative overflow-hidden group">
+                <div class="flex items-center justify-between text-slate-500 mb-2">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Pemesan</span>
+                    <div class="w-7 h-7 rounded-lg bg-ios-blue text-white flex items-center justify-center text-xs shadow-sm">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline justify-between">
+                    <span id="statTotalPcs" class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">36</span>
+                    <span class="text-xs font-medium text-slate-500">Pcs Jersey</span>
+                </div>
+                <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                    <span class="text-ios-blue font-medium"><i class="fa-solid fa-shirt mr-1"></i><span id="statPendekCount">23</span> Pendek</span>
+                    <span class="text-ios-indigo font-medium"><i class="fa-solid fa-shirt mr-1"></i><span id="statPanjangCount">13</span> Panjang</span>
+                </div>
+            </div>
+
+            <!-- Stat Card 2: Terkumpul -->
+            <div class="ios-card p-4 relative overflow-hidden group">
+                <div class="flex items-center justify-between text-slate-500 mb-2">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Dana Terkumpul</span>
+                    <div class="w-7 h-7 rounded-lg bg-ios-green text-white flex items-center justify-center text-xs shadow-sm">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                </div>
+                <div class="text-xl md:text-2xl font-extrabold text-ios-green tracking-tight" id="statTotalPaid">Rp0</div>
+                <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                    <span>Target:</span>
+                    <span class="font-bold text-slate-700" id="statTargetTotal">Rp6.560.000</span>
+                </div>
+            </div>
+
+            <!-- Stat Card 3: Status Lunas -->
+            <div class="ios-card p-4 relative overflow-hidden group">
+                <div class="flex items-center justify-between text-slate-500 mb-2">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Status Lunas</span>
+                    <div class="w-7 h-7 rounded-lg bg-ios-green text-white flex items-center justify-center text-xs shadow-sm">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline justify-between">
+                    <span id="statLunasCount" class="text-2xl md:text-3xl font-extrabold text-ios-green tracking-tight">0</span>
+                    <span class="text-xs font-bold text-slate-700" id="statLunasPercent">0%</span>
+                </div>
+                <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                    <span class="text-ios-orange font-semibold" id="statDpCount">0 DP</span>
+                    <span class="text-ios-red font-semibold" id="statUnpaidCount">36 Belum</span>
+                </div>
+            </div>
+
+            <!-- Stat Card 4: Progres Pembayaran -->
+            <div class="ios-card p-4 relative overflow-hidden flex flex-col justify-between">
+                <div class="flex items-center justify-between text-slate-500 mb-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Capaian Uang</span>
+                    <span id="statProgressPercent" class="text-xs font-extrabold text-ios-blue">0%</span>
+                </div>
+                <div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden p-0.5 my-2 border border-slate-200/60">
+                        <div id="statProgressBar" class="bg-gradient-to-r from-ios-blue to-ios-green h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] text-slate-500">
+                        <span>DB: <strong id="dbModeLabel" class="text-slate-700">Local Mode</strong></span>
+                        <button onclick="syncDataWithSupabase()" class="text-ios-blue font-semibold hover:underline"><i class="fa-solid fa-arrows-rotate mr-0.5"></i> Sync</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ios-card p-4 md:p-5 relative overflow-hidden">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 bg-ios-orange/15 text-ios-orange border border-ios-orange/20 rounded-full text-[10px] font-extrabold tracking-wide uppercase">Subsidi Donatur</span>
+                        <h2 class="text-sm md:text-base font-bold text-slate-900">Skema Potongan Donasi Tim (Rp700.000)</h2>
+                    </div>
+                    <p class="text-xs text-slate-500">Pilih opsi subsidi harga satuan untuk menyesuaikan tagihan seluruh pemesan.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <select id="selectDiscountOption" onchange="updatePriceScheme()" class="bg-slate-100 text-slate-900 text-xs md:text-sm font-semibold border border-slate-200 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-ios-blue outline-none cursor-pointer w-full lg:w-auto shadow-sm">
+                        <option value="c" selected>Opsi C (Diskon 20k/pcs) - Pendek: 155k | Panjang: 175k [Rekomendasi]</option>
+                        <option value="normal">Standard (Normal) - Pendek: 175k | Panjang: 195k</option>
+                        <option value="a">Opsi A (Diskon 19.5k/pcs) - Pendek: 155.5k | Panjang: 175.5k</option>
+                        <option value="b">Opsi B (Diskon 19k/pcs) - Pendek: 156k | Panjang: 176k</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mt-4 pt-3.5 border-t border-slate-100 grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                    <span class="block text-slate-500 text-[10px]">Harga Lengan Pendek:</span>
+                    <strong id="displayPricePendek" class="text-ios-green font-bold text-sm">Rp155.000</strong>
+                    <span class="text-[10px] text-slate-500 block"> (DP 50%: <span id="displayDpPendek">Rp77.500</span>)</span>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                    <span class="block text-slate-500 text-[10px]">Harga Lengan Panjang:</span>
+                    <strong id="displayPricePanjang" class="text-ios-green font-bold text-sm">Rp175.000</strong>
+                    <span class="text-[10px] text-slate-500 block"> (DP 50%: <span id="displayDpPanjang">Rp87.500</span>)</span>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                    <span class="block text-slate-500 text-[10px]">Total Tagihan Bersih:</span>
+                    <strong id="displayTotalBill" class="text-slate-900 font-bold text-sm">Rp5.840.000</strong>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                    <span class="block text-slate-500 text-[10px]">Total Donasi Terpakai:</span>
+                    <strong id="displayDonationUsed" class="text-ios-orange font-bold text-sm">Rp720.000</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="ios-card p-4 space-y-3">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                
+                <!-- Search & Filters -->
+                <div class="flex flex-1 flex-wrap items-center gap-2">
+                    <!-- Search Input -->
+                    <div class="relative flex-1 min-w-[200px]">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="searchInput" oninput="renderTable()" placeholder="Cari pemesan atau no punggung..." class="w-full pl-9 pr-3.5 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-ios-blue outline-none transition-all">
+                    </div>
+
+                    <!-- Status Filter -->
+                    <select id="filterStatus" onchange="renderTable()" class="bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-ios-blue outline-none cursor-pointer">
+                        <option value="all">Semua Status</option>
+                        <option value="unpaid">Belum Bayar</option>
+                        <option value="dp">DP (50%)</option>
+                        <option value="lunas">Lunas</option>
+                    </select>
+
+                    <!-- Sleeve Filter -->
+                    <select id="filterSleeve" onchange="renderTable()" class="bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-ios-blue outline-none cursor-pointer">
+                        <option value="all">Semua Lengan</option>
+                        <option value="PENDEK">Lengan Pendek</option>
+                        <option value="PANJANG">Lengan Panjang</option>
+                    </select>
+
+                    <!-- Gender Filter -->
+                    <select id="filterGender" onchange="renderTable()" class="bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-ios-blue outline-none cursor-pointer">
+                        <option value="all">Semua Kategori</option>
+                        <option value="LADIES">LADIES</option>
+                        <option value="MEN">MEN</option>
+                    </select>
+                </div>
+
+                <!-- Bulk Selection Actions -->
+                <div id="bulkActionContainer" class="flex items-center gap-2 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-200">
+                    <span class="text-xs text-slate-500 font-medium">Terpilih (<span id="selectedCount" class="text-slate-900 font-bold">0</span>):</span>
+                    <button onclick="applyBulkStatus('dp')" class="px-3 py-1.5 bg-ios-orange/15 hover:bg-ios-orange/25 border border-ios-orange/30 text-ios-orange text-xs font-bold rounded-full transition-all active:scale-95">
+                        <i class="fa-solid fa-clock text-[10px] mr-1"></i> Set DP
+                    </button>
+                    <button onclick="applyBulkStatus('lunas')" class="px-3 py-1.5 bg-ios-green/15 hover:bg-ios-green/25 border border-ios-green/30 text-ios-green text-xs font-bold rounded-full transition-all active:scale-95">
+                        <i class="fa-solid fa-check text-[10px] mr-1"></i> Set Lunas
+                    </button>
+                    <button onclick="applyBulkStatus('unpaid')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-semibold rounded-full transition-all active:scale-95">
+                        Reset Status
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="ios-card overflow-hidden">
+            
+            <!-- Desktop Landscape View (Table) -->
+            <div class="hidden md:block overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100/80 border-b border-slate-200 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
+                            <th class="p-3.5 text-center w-10">
+                                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" class="rounded-md border-slate-300 bg-white text-ios-blue focus:ring-ios-blue h-4 w-4 cursor-pointer">
+                            </th>
+                            <th class="p-3.5 w-12 text-center">No</th>
+                            <th class="p-3.5">Nama Pemesan</th>
+                            <th class="p-3.5 text-center">Ukuran</th>
+                            <th class="p-3.5 text-center">Kategori</th>
+                            <th class="p-3.5 text-center">No. Punggung</th>
+                            <th class="p-3.5 text-center">Lengan</th>
+                            <th class="p-3.5 text-right">Tagihan</th>
+                            <th class="p-3.5 text-center">Status Pembayaran</th>
+                            <th class="p-3.5 text-center">Aksi Cepat</th>
+                        </tr>
+                    </thead>
+                    <tbody id="memberTableBody" class="divide-y divide-slate-100 text-xs text-slate-800">
+                        <!-- Dynamic Rows Generated via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Portrait View (Card List) -->
+            <div id="mobileCardsContainer" class="md:hidden divide-y divide-slate-100">
+                <!-- Dynamic Cards Generated via JS -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden py-12 text-center">
+                <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                    <i class="fa-solid fa-folder-open text-xl"></i>
+                </div>
+                <p class="text-sm font-semibold text-slate-800">Tidak ada data ditemukan</p>
+                <p class="text-xs text-slate-500 mt-1">Coba kata kunci pencarian atau filter lain.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Edit Payment Detail -->
+    <div id="paymentModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+        <div class="bg-white rounded-t-[32px] sm:rounded-[28px] max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in slide-in-from-bottom duration-200">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base" id="modalMemberName">Detail Pembayaran</h3>
+                    <p class="text-[11px] text-slate-500">Atur status pembayaran & catatan transaksi</p>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-3.5 text-xs">
+                <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 grid grid-cols-2 gap-2">
+                    <div>
+                        <span class="text-slate-500 block text-[10px]">Tipe Jersey:</span>
+                        <span id="modalJerseyType" class="font-semibold text-slate-800">S / LADIES / PENDEK</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block text-[10px]">Nomor Punggung:</span>
+                        <span id="modalJerseyNumber" class="font-bold text-ios-blue font-mono">#01</span>
+                    </div>
+                    <div class="col-span-2 pt-2 border-t border-slate-200/60 flex justify-between items-center">
+                        <span class="text-slate-500">Total Tagihan:</span>
+                        <span id="modalTotalBill" class="font-extrabold text-ios-green text-sm">Rp155.000</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-600 mb-1.5">Pilih Status Pembayaran</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" onclick="setModalStatus('unpaid')" id="btnStatusUnpaid" class="py-2.5 border text-center rounded-xl font-medium transition-all text-xs">Belum Bayar</button>
+                        <button type="button" onclick="setModalStatus('dp')" id="btnStatusDp" class="py-2.5 border text-center rounded-xl font-medium transition-all text-xs">DP (50%)</button>
+                        <button type="button" onclick="setModalStatus('lunas')" id="btnStatusLunas" class="py-2.5 border text-center rounded-xl font-medium transition-all text-xs">Lunas</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-600 mb-1">Jumlah Nominal Terbayar (Rp)</label>
+                    <input type="number" id="inputAmountPaid" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-ios-blue font-bold text-ios-green text-sm">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-600 mb-1">Catatan / Tanggal Transfer</label>
+                    <input type="text" id="inputNote" placeholder="Cth: Trf BCA 27 Sep - An Dond" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-ios-blue text-slate-800 text-xs">
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full font-medium text-xs">Batal</button>
+                <button onclick="saveModalPayment()" class="px-4 py-2 bg-ios-blue hover:bg-blue-600 text-white rounded-full font-bold text-xs shadow-lg shadow-blue-500/20 active:scale-95">Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Supabase Settings & Setup -->
+    <div id="supabaseModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-[28px] max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-xl bg-ios-green/15 text-ios-green flex items-center justify-center">
+                        <i class="fa-solid fa-database"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-base">Pengaturan Supabase Cloud</h3>
+                        <p class="text-xs text-slate-500">Hubungkan database online untuk sinkronisasi real-time</p>
+                    </div>
+                </div>
+                <button onclick="closeSupabaseModal()" class="text-slate-400 hover:text-slate-700 p-1 rounded-full hover:bg-slate-100">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-medium text-slate-600 mb-1">Supabase Project URL</label>
+                    <input type="text" id="supabaseUrlInput" placeholder="https://xyzcompany.supabase.co" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-ios-green text-slate-900">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-slate-600 mb-1">Supabase Anon Key</label>
+                    <input type="password" id="supabaseKeyInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-ios-green text-slate-900 font-mono">
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-600 font-medium">Langkah Awal: Buat Tabel di Supabase</span>
+                        <button onclick="copySqlScript()" class="text-ios-green hover:underline font-semibold flex items-center gap-1">
+                            <i class="fa-regular fa-copy"></i> Salin SQL
+                        </button>
+                    </div>
+                    <pre id="sqlSnippet" class="text-[10px] text-slate-600 bg-white p-2.5 rounded-xl border border-slate-200 overflow-x-auto font-mono">
+CREATE TABLE jersey_members (
+  id INT PRIMARY KEY,
+  name TEXT NOT NULL,
+  size TEXT,
+  gender TEXT,
+  number TEXT,
+  sleeve TEXT,
+  status TEXT DEFAULT 'unpaid',
+  amount_paid NUMERIC DEFAULT 0,
+  note TEXT,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);</pre>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+                <button onclick="disconnectSupabase()" class="px-3 py-1.5 text-ios-red hover:bg-ios-red/10 rounded-full font-medium text-xs">Putuskan Supabase</button>
+                <div class="flex gap-2">
+                    <button onclick="closeSupabaseModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full font-medium text-xs">Tutup</button>
+                    <button onclick="saveSupabaseConfig()" class="px-4 py-2 bg-ios-green hover:bg-green-600 text-white rounded-full font-bold text-xs shadow-lg shadow-green-500/20 active:scale-95">Simpan & Hubungkan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Vercel Deployment Guide -->
+    <div id="vercelModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-[28px] max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-xl bg-ios-orange/15 text-ios-orange flex items-center justify-center">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-base">Panduan Deploy ke Vercel</h3>
+                        <p class="text-xs text-slate-500">Publikasikan aplikasi web ini secara gratis dalam 2 menit</p>
+                    </div>
+                </div>
+                <button onclick="closeVercelModal()" class="text-slate-400 hover:text-slate-700 p-1 rounded-full hover:bg-slate-100">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs text-slate-700 leading-relaxed">
+                <ol class="list-decimal list-inside space-y-2.5 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                    <li>Simpan berkas <code class="bg-slate-200 text-ios-orange px-1.5 py-0.5 rounded-md">index.html</code> ini ke dalam folder di komputer Anda.</li>
+                    <li>Upload folder tersebut ke akun <strong>GitHub</strong> Anda (buat repository baru).</li>
+                    <li>Buka dashboard <a href="https://vercel.com" target="_blank" class="text-ios-blue underline font-semibold">Vercel.com</a> dan buat <strong>New Project</strong>.</li>
+                    <li>Pilih repository GitHub tersebut, lalu klik tombol <strong>Deploy</strong>.</li>
+                    <li>Selesai! Web aplikasi Anda sudah online dengan domain custom gratis dari Vercel.</li>
+                </ol>
+
+                <div class="p-3 bg-ios-blue/10 border border-ios-blue/20 rounded-2xl text-[11px] text-blue-900 flex items-start gap-2">
+                    <i class="fa-solid fa-circle-info mt-0.5 text-ios-blue"></i>
+                    <span><strong>Tips Supabase:</strong> Saat sudah ter-deploy di Vercel, cukup buka modal Supabase di web live Anda dan masukkan credentials URL/Key. Data akan tersinkron otomatis untuk semua anggota tim!</span>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t border-slate-100">
+                <button onclick="closeVercelModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-full font-bold text-xs active:scale-95">Paham & Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal WhatsApp Share -->
+    <div id="shareModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-[28px] max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2 text-ios-green">
+                    <i class="fa-brands fa-whatsapp text-2xl"></i>
+                    <h3 class="font-bold text-slate-900 text-base">Format Rekap WhatsApp Tim</h3>
+                </div>
+                <button onclick="closeShareModal()" class="text-slate-400 hover:text-slate-700 p-1 rounded-full hover:bg-slate-100">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div>
+                <p class="text-xs text-slate-500 mb-2">Teks rekap berikut siap disalin dan dibagikan ke grup WhatsApp:</p>
+                <textarea id="shareTextarea" readonly class="w-full h-64 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-mono text-slate-800 outline-none focus:ring-2 focus:ring-ios-green leading-relaxed"></textarea>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+                <button onclick="closeShareModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full font-medium text-xs">Tutup</button>
+                <button onclick="copyToClipboard()" class="px-4 py-2 bg-ios-green hover:bg-green-600 text-white rounded-full font-bold text-xs shadow-lg shadow-green-500/20 flex items-center gap-1.5 active:scale-95">
+                    <i class="fa-regular fa-copy"></i>
+                    <span>Salin Rekap WA</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900/90 backdrop-blur-lg border border-slate-700 text-white px-4 py-3 rounded-full shadow-2xl text-xs font-semibold z-50 flex items-center gap-2.5 transform translate-y-24 opacity-0 transition-all duration-300">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-ios-green text-base"></i>
+        <span id="toastMsg">Pesan Toast</span>
+    </div>
+
+    <script>
+        // Initial Data 36 Members
+        const INITIAL_DATA = [
+            { id: 1, name: "DOND", size: "S", gender: "LADIES", number: "01", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 2, name: "NABIL", size: "S", gender: "MEN", number: "02", sleeve: "PANJANG", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 3, name: "PASTRY", size: "M", gender: "MEN", number: "03", sleeve: "PANJANG", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 4, name: "NAURA", size: "L", gender: "LADIES", number: "04", sleeve: "PANJANG", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 5, name: "ABELL", size: "XS", gender: "MEN", number: "05", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 6, name: "DEVINA", size: "S", gender: "LADIES", number: "07", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 7, name: "VCAN", size: "S", gender: "LADIES", number: "08", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 8, name: "JIGSAW", size: "L", gender: "LADIES", number: "09", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 9, name: "YRA", size: "S", gender: "LADIES", number: "10", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 10, name: "BIANCA", size: "S", gender: "LADIES", number: "11", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 11, name: "BANG π", size: "L", gender: "LADIES", number: "12", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 12, name: "BLUEBERRY", size: "S", gender: "LADIES", number: "13", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 13, name: "JAYAPURA", size: "L", gender: "MEN", number: "14", sleeve: "PANJANG", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 14, name: "GINA", size: "S", gender: "LADIES", number: "15", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 15, name: "BIINTANGG", size: "M", gender: "MEN", number: "16", sleeve: "PANJANG", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 16, name: "AYAY", size: "S", gender: "LADIES", number: "16", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 17, name: "LAMINE ADIMA", size: "S", gender: "MEN", number: "17", sleeve: "PANJANG", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 18, name: "CYUU", size: "M", gender: "LADIES", number: "18", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 19, name: "PUTRY", size: "L", gender: "LADIES", number: "19", sleeve: "PANJANG", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 20, name: "JALILI", size: "S", gender: "LADIES", number: "21", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 21, name: "JIHAN", size: "M", gender: "MEN", number: "22", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 22, name: "FRAME", size: "L", gender: "MEN", number: "23", sleeve: "PANJANG", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 23, name: "AIRA", size: "S", gender: "MEN", number: "24", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 24, name: "ROPAN", size: "S", gender: "MEN", number: "25", sleeve: "PANJANG", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 25, name: "KARINA", size: "M", gender: "LADIES", number: "26", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 26, name: "ADIS", size: "L", gender: "LADIES", number: "27", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 27, name: "REIHANZ", size: "5XL", gender: "MEN", number: "28", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 28, name: "FTMA", size: "M", gender: "MEN", number: "31", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 29, name: "KIYOU", size: "L", gender: "LADIES", number: "39", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 30, name: "AQIYAYAY", size: "M", gender: "LADIES", number: "55", sleeve: "PANJANG", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 31, name: "NAZWA", size: "S", gender: "LADIES", number: "65", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 32, name: "DZAKK", size: "M", gender: "MEN", number: "67", sleeve: "PANJANG", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 33, name: "WIRANATA", size: "L", gender: "MEN", number: "69", sleeve: "PANJANG", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 34, name: "HERMAWAN", size: "M", gender: "MEN", number: "75", sleeve: "PANJANG", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 35, name: "WAKASA", size: "S", gender: "MEN", number: "99", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" },
+            { id: 36, name: "BACKBURNER", size: "XXL", gender: "MEN", number: "106", sleeve: "PENDEK", status: "unpaid", amountPaid: 0, note: "" }
+        ];
+
+        // App State
+        let members = [];
+        let selectedIds = new Set();
+        let currentModalMemberId = null;
+        let selectedModalStatus = 'unpaid';
+        let supabaseClient = null;
+
+        // Hardcoded Supabase Credentials
+        const DEFAULT_SUPABASE_URL = "https://YOUR_SUPABASE_PROJECT_ID.supabase.co"; 
+        const DEFAULT_SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY";
+
+        // Pricing Scheme Rules
+        const PRICE_SCHEMES = {
+            c: { pendek: 155000, panjang: 175000, label: "Opsi C (-20k)", donationUsed: 720000 },
+            normal: { pendek: 175000, panjang: 195000, label: "Normal", donationUsed: 0 },
+            a: { pendek: 155500, panjang: 175500, label: "Opsi A (-19.5k)", donationUsed: 702000 },
+            b: { pendek: 156000, panjang: 176000, label: "Opsi B (-19k)", donationUsed: 684000 }
+        };
+
+        let currentSchemeKey = 'c';
+
+        function formatRp(amount) {
+            return 'Rp' + Math.round(amount).toLocaleString('id-ID');
+        }
+
+        function getItemPrice(sleeve) {
+            const scheme = PRICE_SCHEMES[currentSchemeKey];
+            return sleeve === 'PANJANG' ? scheme.panjang : scheme.pendek;
+        }
+
+        // Initialize Application
+        async function initApp() {
+            // Load pricing scheme preference
+            const savedScheme = localStorage.getItem('jersey_price_scheme');
+            if (savedScheme && PRICE_SCHEMES[savedScheme]) {
+                currentSchemeKey = savedScheme;
+                document.getElementById('selectDiscountOption').value = currentSchemeKey;
+            }
+
+            // Init Supabase if keys exist
+            initSupabaseFromStorage();
+
+            // Load Local Data as Fallback
+            const savedData = localStorage.getItem('jersey_payment_members');
+            if (savedData) {
+                try {
+                    members = JSON.parse(savedData);
+                } catch(e) {
+                    members = [...INITIAL_DATA];
+                }
+            } else {
+                members = JSON.parse(JSON.stringify(INITIAL_DATA));
+            }
+
+            // If Supabase connected, attempt cloud sync down
+            if (supabaseClient) {
+                await fetchMembersFromSupabase();
+            }
+
+            updatePriceSchemeDisplay();
+            renderTable();
+            updateStats();
+        }
+
+        function saveData() {
+            localStorage.setItem('jersey_payment_members', JSON.stringify(members));
+            localStorage.setItem('jersey_price_scheme', currentSchemeKey);
+            updateStats();
+
+            // Auto push to Supabase if client is ready
+            if (supabaseClient) {
+                pushMembersToSupabase();
+            }
+        }
+
+        function updatePriceScheme() {
+            currentSchemeKey = document.getElementById('selectDiscountOption').value;
+            saveData();
+            updatePriceSchemeDisplay();
+            renderTable();
+            showToast("Skema harga diperbarui.");
+        }
+
+        function updatePriceSchemeDisplay() {
+            const scheme = PRICE_SCHEMES[currentSchemeKey];
+            document.getElementById('displayPricePendek').innerText = formatRp(scheme.pendek);
+            document.getElementById('displayDpPendek').innerText = formatRp(scheme.pendek * 0.5);
+            
+            document.getElementById('displayPricePanjang').innerText = formatRp(scheme.panjang);
+            document.getElementById('displayDpPanjang').innerText = formatRp(scheme.panjang * 0.5);
+
+            let totalBill = 0;
+            members.forEach(m => {
+                totalBill += getItemPrice(m.sleeve);
+            });
+
+            document.getElementById('displayTotalBill').innerText = formatRp(totalBill);
+            document.getElementById('displayDonationUsed').innerText = formatRp(scheme.donationUsed);
+        }
+
+        function updateStats() {
+            const totalPcs = members.length;
+            const pendekCount = members.filter(m => m.sleeve === 'PENDEK').length;
+            const panjangCount = members.filter(m => m.sleeve === 'PANJANG').length;
+
+            const lunasCount = members.filter(m => m.status === 'lunas').length;
+            const dpCount = members.filter(m => m.status === 'dp').length;
+            const unpaidCount = members.filter(m => m.status === 'unpaid').length;
+
+            let totalPaid = 0;
+            let targetTotal = 0;
+
+            members.forEach(m => {
+                const fullPrice = getItemPrice(m.sleeve);
+                targetTotal += fullPrice;
+
+                if (m.status === 'lunas') {
+                    totalPaid += fullPrice;
+                } else if (m.status === 'dp') {
+                    totalPaid += (m.amountPaid > 0 ? m.amountPaid : (fullPrice * 0.5));
+                } else {
+                    totalPaid += (m.amountPaid || 0);
+                }
+            });
+
+            const lunasPercent = totalPcs > 0 ? Math.round((lunasCount / totalPcs) * 100) : 0;
+            const moneyPercent = targetTotal > 0 ? Math.min(100, Math.round((totalPaid / targetTotal) * 100)) : 0;
+
+            document.getElementById('statTotalPcs').innerText = totalPcs;
+            document.getElementById('statPendekCount').innerText = pendekCount;
+            document.getElementById('statPanjangCount').innerText = panjangCount;
+
+            document.getElementById('statTotalPaid').innerText = formatRp(totalPaid);
+            document.getElementById('statTargetTotal').innerText = formatRp(targetTotal);
+
+            document.getElementById('statLunasCount').innerText = lunasCount;
+            document.getElementById('statLunasPercent').innerText = lunasPercent + '%';
+            document.getElementById('statDpCount').innerText = dpCount + ' DP';
+            document.getElementById('statUnpaidCount').innerText = unpaidCount + ' Belum';
+
+            document.getElementById('statProgressPercent').innerText = moneyPercent + '%';
+            document.getElementById('statProgressBar').style.width = moneyPercent + '%';
+        }
+
+        function getFilteredMembers() {
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const statusFilter = document.getElementById('filterStatus').value;
+            const sleeveFilter = document.getElementById('filterSleeve').value;
+            const genderFilter = document.getElementById('filterGender').value;
+
+            return members.filter(m => {
+                const matchSearch = m.name.toLowerCase().includes(search) || m.number.includes(search);
+                const matchStatus = statusFilter === 'all' || m.status === statusFilter;
+                const matchSleeve = sleeveFilter === 'all' || m.sleeve === sleeveFilter;
+                const matchGender = genderFilter === 'all' || m.gender === genderFilter;
+
+                return matchSearch && matchStatus && matchSleeve && matchGender;
+            });
+        }
+
+        function renderTable() {
+            const filtered = getFilteredMembers();
+            const tbody = document.getElementById('memberTableBody');
+            const mobileContainer = document.getElementById('mobileCardsContainer');
+            const emptyState = document.getElementById('emptyState');
+
+            tbody.innerHTML = '';
+            mobileContainer.innerHTML = '';
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            filtered.forEach(m => {
+                const fullPrice = getItemPrice(m.sleeve);
+                const isSelected = selectedIds.has(m.id);
+
+                // Status Badge HTML (iOS pill style light)
+                let badgeHTML = '';
+                if (m.status === 'lunas') {
+                    badgeHTML = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-ios-green/15 text-ios-green border border-ios-green/30"><i class="fa-solid fa-circle-check text-[10px]"></i> Lunas</span>`;
+                } else if (m.status === 'dp') {
+                    badgeHTML = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-ios-orange/15 text-ios-orange border border-ios-orange/30"><i class="fa-solid fa-clock text-[10px]"></i> DP 50%</span>`;
+                } else {
+                    badgeHTML = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-500 border border-slate-200"><i class="fa-solid fa-circle-xmark text-[10px]"></i> Belum Bayar</span>`;
+                }
+
+                // Sleeve Badge HTML
+                const sleeveBadge = m.sleeve === 'PANJANG' 
+                    ? `<span class="px-2 py-0.5 rounded-full bg-ios-indigo/15 text-ios-indigo border border-ios-indigo/25 font-bold text-[10px]">Panjang</span>`
+                    : `<span class="px-2 py-0.5 rounded-full bg-ios-blue/15 text-ios-blue border border-ios-blue/25 font-bold text-[10px]">Pendek</span>`;
+
+                // Desktop Table Row
+                const tr = document.createElement('tr');
+                tr.className = `hover:bg-slate-50 transition-colors ${isSelected ? 'bg-ios-blue/10' : ''}`;
+                tr.innerHTML = `
+                    <td class="p-3.5 text-center">
+                        <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect(${m.id}, this.checked)" class="rounded-md border-slate-300 bg-white text-ios-blue focus:ring-ios-blue h-4 w-4 cursor-pointer">
+                    </td>
+                    <td class="p-3.5 text-center text-slate-400 font-medium">${m.id}</td>
+                    <td class="p-3.5">
+                        <div class="font-bold text-slate-900 text-sm">${m.name}</div>
+                        ${m.note ? `<div class="text-[10px] text-ios-orange flex items-center gap-1 mt-0.5"><i class="fa-solid fa-note-sticky text-[9px]"></i> ${m.note}</div>` : ''}
+                    </td>
+                    <td class="p-3.5 text-center font-bold text-slate-800">${m.size}</td>
+                    <td class="p-3.5 text-center"><span class="text-[10px] font-semibold text-slate-500">${m.gender}</span></td>
+                    <td class="p-3.5 text-center font-mono font-bold text-ios-blue">#${m.number}</td>
+                    <td class="p-3.5 text-center">${sleeveBadge}</td>
+                    <td class="p-3.5 text-right font-bold text-ios-green">${formatRp(fullPrice)}</td>
+                    <td class="p-3.5 text-center cursor-pointer" onclick="openPaymentModal(${m.id})">${badgeHTML}</td>
+                    <td class="p-3.5 text-center">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="quickToggleStatus(${m.id})" class="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-ios-blue transition-colors" title="Ubah Status Cepat">
+                                <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                            </button>
+                            <button onclick="openPaymentModal(${m.id})" class="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-800 transition-colors" title="Edit Detail">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+
+                // Mobile Card View
+                const card = document.createElement('div');
+                card.className = `p-4 space-y-3 ${isSelected ? 'bg-ios-blue/10' : ''}`;
+                card.innerHTML = `
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect(${m.id}, this.checked)" class="rounded-md border-slate-300 bg-white text-ios-blue focus:ring-ios-blue h-4 w-4 cursor-pointer mt-0.5">
+                            <div>
+                                <span class="text-[10px] text-slate-400 font-mono">#${m.id}</span>
+                                <h4 class="font-bold text-slate-900 text-base leading-tight">${m.name}</h4>
+                            </div>
+                        </div>
+                        <div onclick="openPaymentModal(${m.id})" class="cursor-pointer">
+                            ${badgeHTML}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-2xl border border-slate-200 text-center text-xs">
+                        <div>
+                            <span class="text-[10px] text-slate-400 block">Ukuran</span>
+                            <span class="font-bold text-slate-800">${m.size} (${m.gender})</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 block">No. Punggung</span>
+                            <span class="font-mono font-bold text-ios-blue">#${m.number}</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 block">Lengan</span>
+                            <span class="font-semibold text-slate-800">${m.sleeve}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between text-xs pt-0.5">
+                        <div>
+                            <span class="text-slate-500 text-[10px]">Total Tagihan: </span>
+                            <span class="font-bold text-ios-green">${formatRp(fullPrice)}</span>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <button onclick="quickToggleStatus(${m.id})" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-full text-[11px] transition-colors flex items-center gap-1 border border-slate-200">
+                                <i class="fa-solid fa-arrows-rotate text-[10px]"></i> Switch
+                            </button>
+                            <button onclick="openPaymentModal(${m.id})" class="px-3 py-1.5 bg-ios-blue hover:bg-blue-600 text-white font-bold rounded-full text-[11px] transition-colors shadow-sm active:scale-95">
+                                Edit
+                            </button>
+                        </div>
+                    </div>
+                    ${m.note ? `<div class="text-[10px] text-ios-orange bg-ios-orange/10 p-2 rounded-xl border border-ios-orange/20"><i class="fa-solid fa-circle-info text-ios-orange mr-1"></i> ${m.note}</div>` : ''}
+                `;
+                mobileContainer.appendChild(card);
+            });
+
+            updateBulkActionState();
+        }
+
+        function toggleSelect(id, checked) {
+            if (checked) selectedIds.add(id);
+            else selectedIds.delete(id);
+            renderTable();
+        }
+
+        function toggleSelectAll(checkbox) {
+            const filtered = getFilteredMembers();
+            if (checkbox.checked) filtered.forEach(m => selectedIds.add(m.id));
+            else filtered.forEach(m => selectedIds.delete(m.id));
+            renderTable();
+        }
+
+        function updateBulkActionState() {
+            document.getElementById('selectedCount').innerText = selectedIds.size;
+            const selectAllCb = document.getElementById('selectAllCheckbox');
+            const filtered = getFilteredMembers();
+
+            if (filtered.length > 0 && filtered.every(m => selectedIds.has(m.id))) {
+                selectAllCb.checked = true;
+                selectAllCb.indeterminate = false;
+            } else if (filtered.some(m => selectedIds.has(m.id))) {
+                selectAllCb.checked = false;
+                selectAllCb.indeterminate = true;
+            } else {
+                selectAllCb.checked = false;
+                selectAllCb.indeterminate = false;
+            }
+        }
+
+        function applyBulkStatus(status) {
+            if (selectedIds.size === 0) {
+                showToast("Pilih minimal satu pemesan terlebih dahulu.", "warning");
+                return;
+            }
+
+            members.forEach(m => {
+                if (selectedIds.has(m.id)) {
+                    m.status = status;
+                    const fullPrice = getItemPrice(m.sleeve);
+                    if (status === 'lunas') m.amountPaid = fullPrice;
+                    else if (status === 'dp') m.amountPaid = fullPrice * 0.5;
+                    else m.amountPaid = 0;
+                }
+            });
+
+            saveData();
+            renderTable();
+            showToast(`Status ${selectedIds.size} orang diubah ke ${status.toUpperCase()}.`);
+        }
+
+        function quickToggleStatus(id) {
+            const m = members.find(x => x.id === id);
+            if (!m) return;
+
+            const fullPrice = getItemPrice(m.sleeve);
+            if (m.status === 'unpaid') {
+                m.status = 'dp';
+                m.amountPaid = fullPrice * 0.5;
+            } else if (m.status === 'dp') {
+                m.status = 'lunas';
+                m.amountPaid = fullPrice;
+            } else {
+                m.status = 'unpaid';
+                m.amountPaid = 0;
+            }
+
+            saveData();
+            renderTable();
+            showToast(`Status ${m.name} -> ${m.status.toUpperCase()}`);
+        }
+
+        // Supabase Integration Logic
+        function initSupabaseFromStorage() {
+            // Menggunakan Supabase Key yang langsung ada di dalam kode jika tersedia, atau dari LocalStorage
+            const storedUrl = localStorage.getItem('supabase_url');
+            const storedKey = localStorage.getItem('supabase_key');
+
+            const isDefaultUrlValid = DEFAULT_SUPABASE_URL && !DEFAULT_SUPABASE_URL.includes("YOUR_SUPABASE");
+            const isDefaultKeyValid = DEFAULT_SUPABASE_KEY && !DEFAULT_SUPABASE_KEY.includes("YOUR_SUPABASE");
+
+            const url = isDefaultUrlValid ? DEFAULT_SUPABASE_URL : storedUrl;
+            const key = isDefaultKeyValid ? DEFAULT_SUPABASE_KEY : storedKey;
+
+            if (url && key && window.supabase) {
+                try {
+                    supabaseClient = window.supabase.createClient(url, key);
+                    updateCloudBadge(true);
+                } catch(e) {
+                    console.error("Supabase init error:", e);
+                    updateCloudBadge(false);
+                }
+            } else {
+                updateCloudBadge(false);
+            }
+        }
+
+        function updateCloudBadge(isConnected) {
+            const badge = document.getElementById('cloudStatusBadge');
+            const statusText = document.getElementById('cloudStatusText');
+            const modeLabel = document.getElementById('dbModeLabel');
+
+            if (isConnected) {
+                badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-ios-green/15 text-ios-green border border-ios-green/30 cursor-pointer animate-pulse-glow";
+                statusText.innerText = "Supabase Connected";
+                if (modeLabel) modeLabel.innerText = "Supabase Cloud";
+            } else {
+                badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200 cursor-pointer";
+                statusText.innerText = "Local Storage";
+                if (modeLabel) modeLabel.innerText = "Local Mode";
+            }
+        }
+
+        async function fetchMembersFromSupabase() {
+            if (!supabaseClient) return;
+            try {
+                const { data, error } = await supabaseClient.from('jersey_members').select('*').order('id', { ascending: true });
+                if (error) {
+                    console.warn("Supabase fetch warning:", error.message);
+                    return;
+                }
+
+                if (data && data.length > 0) {
+                    members = data.map(row => ({
+                        id: row.id,
+                        name: row.name,
+                        size: row.size,
+                        gender: row.gender,
+                        number: row.number,
+                        sleeve: row.sleeve,
+                        status: row.status || 'unpaid',
+                        amountPaid: parseFloat(row.amount_paid || 0),
+                        note: row.note || ''
+                    }));
+                    renderTable();
+                    updateStats();
+                    showToast("Data disinkronkan dari Supabase Cloud!");
+                }
+            } catch(err) {
+                console.error("Cloud Fetch Error:", err);
+            }
+        }
+
+        async function pushMembersToSupabase() {
+            if (!supabaseClient) return;
+            try {
+                const records = members.map(m => ({
+                    id: m.id,
+                    name: m.name,
+                    size: m.size,
+                    gender: m.gender,
+                    number: m.number,
+                    sleeve: m.sleeve,
+                    status: m.status,
+                    amount_paid: m.amountPaid,
+                    note: m.note
+                }));
+
+                const { error } = await supabaseClient.from('jersey_members').upsert(records, { onConflict: 'id' });
+                if (error) {
+                    console.error("Supabase upsert error:", error.message);
+                } else {
+                    console.log("Supabase sync success!");
+                }
+            } catch(err) {
+                console.error("Cloud Push Error:", err);
+            }
+        }
+
+        async function syncDataWithSupabase() {
+            if (!supabaseClient) {
+                openSupabaseModal();
+                showToast("Masukkan URL & Key Supabase terlebih dahulu.", "warning");
+                return;
+            }
+            await fetchMembersFromSupabase();
+            await pushMembersToSupabase();
+        }
+
+        function saveSupabaseConfig() {
+            const url = document.getElementById('supabaseUrlInput').value.trim();
+            const key = document.getElementById('supabaseKeyInput').value.trim();
+
+            if (!url || !key) {
+                showToast("Mohon isi URL dan Anon Key Supabase.", "warning");
+                return;
+            }
+
+            localStorage.setItem('supabase_url', url);
+            localStorage.setItem('supabase_key', key);
+
+            initSupabaseFromStorage();
+            closeSupabaseModal();
+
+            if (supabaseClient) {
+                syncDataWithSupabase();
+                showToast("Koneksi Supabase berhasil dikonfigurasi!");
+            }
+        }
+
+        function disconnectSupabase() {
+            localStorage.removeItem('supabase_url');
+            localStorage.removeItem('supabase_key');
+            supabaseClient = null;
+            updateCloudBadge(false);
+            closeSupabaseModal();
+            showToast("Koneksi Supabase telah diputuskan.");
+        }
+
+        // Modal Handlers
+        function openPaymentModal(id) {
+            const m = members.find(x => x.id === id);
+            if (!m) return;
+
+            currentModalMemberId = id;
+            document.getElementById('modalMemberName').innerText = `${m.name} (#${m.id})`;
+            document.getElementById('modalJerseyType').innerText = `${m.size} / ${m.gender} / LENGAN ${m.sleeve}`;
+            document.getElementById('modalJerseyNumber').innerText = `#${m.number}`;
+            
+            const fullPrice = getItemPrice(m.sleeve);
+            document.getElementById('modalTotalBill').innerText = formatRp(fullPrice);
+
+            document.getElementById('inputAmountPaid').value = m.amountPaid || (m.status === 'lunas' ? fullPrice : (m.status === 'dp' ? fullPrice * 0.5 : 0));
+            document.getElementById('inputNote').value = m.note || '';
+
+            setModalStatus(m.status);
+            document.getElementById('paymentModal').classList.remove('hidden');
+        }
+
+        function setModalStatus(status) {
+            selectedModalStatus = status;
+            const btnUnpaid = document.getElementById('btnStatusUnpaid');
+            const btnDp = document.getElementById('btnStatusDp');
+            const btnLunas = document.getElementById('btnStatusLunas');
+
+            [btnUnpaid, btnDp, btnLunas].forEach(btn => {
+                btn.className = "py-2.5 border border-slate-200 bg-slate-50 text-slate-600 rounded-xl font-medium hover:bg-slate-100 transition-all text-xs";
+            });
+
+            if (status === 'unpaid') {
+                btnUnpaid.className = "py-2.5 border border-slate-300 bg-slate-200 text-slate-900 rounded-xl font-bold shadow-sm text-xs";
+            } else if (status === 'dp') {
+                btnDp.className = "py-2.5 border border-ios-orange/50 bg-ios-orange text-white rounded-xl font-bold shadow-sm text-xs";
+            } else if (status === 'lunas') {
+                btnLunas.className = "py-2.5 border border-ios-green/50 bg-ios-green text-white rounded-xl font-bold shadow-sm text-xs";
+            }
+
+            const m = members.find(x => x.id === currentModalMemberId);
+            if (m) {
+                const fullPrice = getItemPrice(m.sleeve);
+                const inputAmount = document.getElementById('inputAmountPaid');
+                if (status === 'lunas') inputAmount.value = fullPrice;
+                else if (status === 'dp') inputAmount.value = fullPrice * 0.5;
+                else inputAmount.value = 0;
+            }
+        }
+
+        function saveModalPayment() {
+            const m = members.find(x => x.id === currentModalMemberId);
+            if (!m) return;
+
+            m.status = selectedModalStatus;
+            m.amountPaid = parseFloat(document.getElementById('inputAmountPaid').value) || 0;
+            m.note = document.getElementById('inputNote').value.trim();
+
+            saveData();
+            renderTable();
+            closeModal();
+            showToast(`Data pembayaran ${m.name} disimpan.`);
+        }
+
+        function closeModal() { document.getElementById('paymentModal').classList.add('hidden'); }
+        
+        function openSupabaseModal() {
+            const isDefaultUrlValid = DEFAULT_SUPABASE_URL && !DEFAULT_SUPABASE_URL.includes("YOUR_SUPABASE");
+            const isDefaultKeyValid = DEFAULT_SUPABASE_KEY && !DEFAULT_SUPABASE_KEY.includes("YOUR_SUPABASE");
+
+            document.getElementById('supabaseUrlInput').value = isDefaultUrlValid ? DEFAULT_SUPABASE_URL : (localStorage.getItem('supabase_url') || '');
+            document.getElementById('supabaseKeyInput').value = isDefaultKeyValid ? DEFAULT_SUPABASE_KEY : (localStorage.getItem('supabase_key') || '');
+            document.getElementById('supabaseModal').classList.remove('hidden'); 
+        }
+        function closeSupabaseModal() { document.getElementById('supabaseModal').classList.add('hidden'); }
+
+        function openVercelModal() { document.getElementById('vercelModal').classList.remove('hidden'); }
+        function closeVercelModal() { document.getElementById('vercelModal').classList.add('hidden'); }
+
+        function copySqlScript() {
+            const sqlText = document.getElementById('sqlSnippet').innerText;
+            const temp = document.createElement('textarea');
+            temp.value = sqlText;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast("Script SQL berhasil disalin ke clipboard!");
+        }
+
+        // WhatsApp Share Generator
+        function openShareModal() {
+            const scheme = PRICE_SCHEMES[currentSchemeKey];
+            const lunasList = members.filter(m => m.status === 'lunas');
+            const dpList = members.filter(m => m.status === 'dp');
+            const unpaidList = members.filter(m => m.status === 'unpaid');
+
+            let totalPaid = 0;
+            let targetTotal = 0;
+
+            members.forEach(m => {
+                const p = getItemPrice(m.sleeve);
+                targetTotal += p;
+                if (m.status === 'lunas') totalPaid += p;
+                else if (m.status === 'dp') totalPaid += (m.amountPaid || (p * 0.5));
+                else totalPaid += (m.amountPaid || 0);
+            });
+
+            let text = `*REKAP PEMBAYARAN JERSEY TIM*\n`;
+            text += `Skema Donasi: ${scheme.label}\n`;
+            text += `Harga: Pendek ${formatRp(scheme.pendek)} | Panjang ${formatRp(scheme.panjang)}\n`;
+            text += `------------------------------------\n`;
+            text += `Total Terkumpul: *${formatRp(totalPaid)}* / *${formatRp(targetTotal)}*\n`;
+            text += `Status: ${lunasList.length} Lunas | ${dpList.length} DP | ${unpaidList.length} Belum\n`;
+            text += `------------------------------------\n\n`;
+
+            if (lunasList.length > 0) {
+                text += `✅ *LUNAS (${lunasList.length}):*\n`;
+                lunasList.forEach((m, idx) => {
+                    text += `${idx + 1}. ${m.name} (${m.size}/${m.gender}/${m.sleeve}/#${m.number})\n`;
+                });
+                text += `\n`;
+            }
+
+            if (dpList.length > 0) {
+                text += `⏳ *DP 50% (${dpList.length}):*\n`;
+                dpList.forEach((m, idx) => {
+                    text += `${idx + 1}. ${m.name} (${m.size}/${m.gender}/${m.sleeve}/#${m.number})\n`;
+                });
+                text += `\n`;
+            }
+
+            if (unpaidList.length > 0) {
+                text += `❌ *BELUM BAYAR (${unpaidList.length}):*\n`;
+                unpaidList.forEach((m, idx) => {
+                    text += `${idx + 1}. ${m.name} (${m.size}/${m.gender}/${m.sleeve}/#${m.number})\n`;
+                });
+                text += `\n`;
+            }
+
+            text += `_Diperbarui secara otomatis pada ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}_`;
+
+            document.getElementById('shareTextarea').value = text;
+            document.getElementById('shareModal').classList.remove('hidden');
+        }
+
+        function closeShareModal() { document.getElementById('shareModal').classList.add('hidden'); }
+
+        function copyToClipboard() {
+            const textarea = document.getElementById('shareTextarea');
+            textarea.select();
+            document.execCommand('copy');
+            showToast("Teks rekap berhasil disalin!");
+        }
+
+        function showToast(msg, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.innerText = msg;
+            if (type === "warning") {
+                toastIcon.className = "fa-solid fa-triangle-exclamation text-ios-orange text-base";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-check text-ios-green text-base";
+            }
+
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3000);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initApp();
+        });
+    </script>
+</body>
+</html>
